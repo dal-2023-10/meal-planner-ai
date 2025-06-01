@@ -1,16 +1,40 @@
-# my_app
+# meal-planner-ai
 
-A new Flutter project.
+献立提案・チラシ登録 Webアプリ
 
-## Getting Started
+## 📦 構成
 
-This project is a starting point for a Flutter application.
+```
+meal-planner-ai/
+├── frontend/              # Flutter Webアプリ（UI入力・画像登録）
+├── backend/               # FastAPI（献立API・BigQuery連携）
+├── infra/                 # Terraform, Cloud Build 等 IaC
+├── .github/workflows/     # GitHub Actions CI/CD 設定
+├── .gitignore
+└── README.md              # ← このファイル
+```
 
-A few resources to get you started if this is your first Flutter project:
+## 📦 環境情報
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Flutter バージョン
+- Flutter SDK: 3.22.1（推奨）
+- Dart: 3.2.3
+- 使用パッケージ：
+  - `multi_select_flutter`
+  - `google_fonts`
+  - `image_picker`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+### ✅ Flutter アプリ（frontend）
+```bash
+cd frontend
+flutter pub get
+flutter run -d chrome  # Web実行
+```
+
+
+## 📝 今後の予定
+
+- [ ] 個人情報、画像の保存
+- [ ] Geminiによる献立生成

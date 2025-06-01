@@ -1,9 +1,0 @@
-google-cloud-aiplatform>=1.42.0
-google-generativeai>=0.3.2
-pandas>=2.2.0
-pandas-gbq>=0.29.0
-pyarrow>=10.0.1
-python-dotenv>=1.0.1
-Pillow>=10.2.0
-ipython>=8.22.1,<9.0.0
-jupyter>=1.0.0 

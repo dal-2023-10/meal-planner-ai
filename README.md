@@ -64,13 +64,19 @@ meal_planner/
 ```bash
 cd backend
 uv venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+# Windows:
+.venv\Scripts\activate
 ```
 
-2. 依存関係のインストール:
+2. 依存関係のインストール（開発用ツールも含めてインストールする場合）:
 ```bash
-uv pip install -r requirements.txt
+uv pip install -e .[dev]
 ```
+
+- 通常の依存関係のみの場合は `[dev]` を外してください。
+- 依存関係は `pyproject.toml` で管理しています。
 
 3. 環境変数の設定:
 ```bash

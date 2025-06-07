@@ -1,0 +1,22 @@
+steps:
+  # Dockerイメージをビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/functions_submit_demo', '.']
+
+  # GCRにプッシュ
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/functions_submit_demo']
+
+  # Cloud Functionsにデプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud functions deploy submitDemo \
+          --gen2 \
+          --region=us-central1 \
+          --runtime=custom \
+          --source=gcr.io/$PROJECT_ID/functions_submit_demo \
+          --trigger-http \
+          --allow-unauthenticated

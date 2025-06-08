@@ -2,6 +2,9 @@ import 'dart:io' show File, Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'recipe_suggestions_page.dart';
 
 class FlyerUploadPage extends StatefulWidget {
   const FlyerUploadPage({super.key});
@@ -65,7 +68,37 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
                   child: const Text('送信'),
                 ),
                 OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () async {
+                    // 例: APIリクエスト
+                    final response = await http.post(
+                      Uri.parse('https://meal-planner-ai-418875428443.asia-northeast1.run.app/generate'),
+                      headers: {'Content-Type': 'application/json'},
+                      body: jsonEncode({
+                        'prompt': 'ユーザー入力をもとに適当にpromptを組み立てて渡す（またはそのままinputDataを送るなど）',
+                      }),
+                    );
+
+                    debugPrint('API status: ${response.statusCode}');
+                    debugPrint('API body: ${response.body}');
+
+                    if (response.statusCode == 200) {
+                      final recipeJson = jsonDecode(response.body);
+
+                      // 👇 ここで型も出す
+                      debugPrint('runtimeType: ${recipeJson.runtimeType}');
+                      debugPrint('recipeJson: $recipeJson');
+
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                        ),
+                      );
+                    } else {
+                      debugPrint('API error: ${response.statusCode}, body: ${response.body}');
+                      // エラー処理
+                    }
+                  },
                   child: const Text('登録しない'),
                 ),
               ],

@@ -9,5 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # アプリケーションコードのコピー
 COPY app/ ./app/
 
-# サーバーの起動
-CMD exec uvicorn app.app:app --host $HOST --port ${PORT}
+# ログ出力の設定
+ENV PYTHONUNBUFFERED=1
+
+# サーバーの起動（Cloud Runの環境変数PORTを使用）
+CMD exec uvicorn app.app:app --host 0.0.0.0 --port ${PORT:-8080}

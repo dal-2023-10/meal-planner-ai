@@ -19,6 +19,11 @@ from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
 from google import generativeai as genai        
 from google.generativeai import GenerationConfig  
+import logging
+
+# ロギングの設定
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────
 # 1. モデル向けパラメータを "全部入り" で保持する dataclass
@@ -547,8 +552,17 @@ def main() -> None:
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+) # テスト用のCORSを許可
+
 setup_environment()
 processor = create_processor()
 

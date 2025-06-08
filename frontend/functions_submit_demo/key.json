@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "dal-ai-agent-hackathon",
+  "private_key_id": "1d3f2286526c27c7959c8949518a8163aade591f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDF3GYM2aIeRR9v\nS+Ktl/qb7o4CA/rohmS2UqTrOcv0ocqkzY0GjzYvY9Qbk7rTCbDbckZBU4Mb37Ey\nWmA25Mb1EtmVSr8sOKw5cI7jwuWS+4vOVDQ/UcRneCRbXDfUshObs51mT/LcyDu+\n1w7889dVMfbxzu0a6wjST/m++2V/yGNjHR7vqNsOIsArk6cmUqdFPi1OwbYCIi0w\ngEvfDG/HL3i/qwpFInyefE61kUUMMJINh9KjUwi0OMi36tLu6tA/eYPC0nvrwMbw\nQgIvIkypjMk8+HkChFyCalotMKcdbur8SIZ7wpmi+Sw6q01oRldJ0vOY60vJBZXe\nVN4vfoitAgMBAAECggEAB8vXFZCJwR7reIDeo1pxXILk2OgmkyeggPKhXvITEEZD\nwYSmluiTs6r/qOqERQaFD9CL5iJlRcw6+NyeHUDxz1Gj0yxz0J6XDVhbDlcX9q0E\nuuePJiORqpti9gVHNJFOZnyIVNy3mW17tS8CKdjDK682p3Ew3zZS+FPVvRRo0Rps\nLg6bskxA8MXzlxsPLqbZ4VZVFaps5hA2KZPEaygDzyr2FN7i6Y1MjP0zy9/+c4Mn\nPYMPQHc27vVP+4uZINooPzxFj42D0/hJ4Nko2RTWtfsuvulzC2UcElM9poyfyMy/\nNqNzfHgaoNxVgaUGKHx7ELYokVXKla4ihrrybHCjAQKBgQDpQ4vvXqe1BvcYb0Nq\nCw42ZBw2KO+YpzTElEr59DJkT7XZ+4opeqnOsWEX/zXwkNOHA4EftTNfx8S4qynl\na1iS+b1zLLxE6cg6akz7xyC7vdFsH92QKRpQs4txcfRBmY75HC1wCJfJtVNVwco5\nTBtVmd91HB47ew7tvp6Vub1GQQKBgQDZJXhcQK1KJMGtP5plczrfCG9qC6oj6m5c\ncABAA7mIKR1uzSclJpR+PyYKbJ75U5VX5u+GVVfc618eNQtHSSb/kkgYzIEk2de3\nmbbdRjtqYAcpwJe5nDuJ3WmidyLJXkhulQ+K6JV40zcqo9ntZZBViV2KgAD8Q/qJ\nG6I1nnXfbQKBgF5xEKj7o97xUP29nofCriBra9ipvkgJ+p1UhP6qVfSzKSd2Zjvh\nA/tBadQzaf1aRao2SwMxc/llgkpaUn4mdhgbsQ5+oEMue/jarQyLVL9uXOnwBN6n\nJZZi+yQVRRWCPJazR9pCQGJUXccszNlh7Pc9c3GQztS6QBMVyFNKfk2BAoGAMC6+\nTEoVqZQKXbT1P3mYIJEwl6lK8Xk9T8mSZKHu8yWcYE+pVfb/kBvXBw0fIVfIlZ6q\nm3Yobt7TVlKS1BiJTMBauxX1ugWUdirnhqXk3S+9pygTAp6GH4s/u0sQLvp6u/7b\nWglN0WecoBuHacPViQVX+jl4/oDfALle/uLQaOkCgYBci3yXBkfC1L9JOptyXpgv\n4rkq4/STMsTlS/p90Vik/qW2Wetcdg9n4kmLHJ/6GPFgQKXekJ2lY52UBiJJfczP\nL3gXkioYOXwKx+vT289CfCva0+0al1FuVsZ9+kwfv9NLKEXvOE6u7jyq11Ne2Qxn\nqUeD/CQOZA6Ya2RykjCOKw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "meal-planner-owner@dal-ai-agent-hackathon.iam.gserviceaccount.com",
+  "client_id": "110779661980228804579",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/meal-planner-owner%40dal-ai-agent-hackathon.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

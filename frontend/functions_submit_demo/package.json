@@ -1,0 +1,17 @@
+{
+  "name": "functions_submit_demo",
+  "version": "1.0.0",
+  "main": "submit_demo.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@google-cloud/bigquery": "^8.1.0",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0"
+  }
+}

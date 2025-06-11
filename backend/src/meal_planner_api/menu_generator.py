@@ -11,6 +11,7 @@ import pandas_gbq
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from shared.gemini_processor import GeminiOptions, GeminiProcessor
+from typing import Union
 
 # スキーマ定義
 RESPONSE_SCHEMA = {
@@ -167,7 +168,7 @@ def create_processor() -> GeminiProcessor:
 
     return GeminiProcessor(options=opts)
 
-def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     BigQueryからデータを読み込む
 
@@ -183,11 +184,13 @@ def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     demo_table = f'{project_name}.{dataset_name}.demo'
     fridge_items_table = f'{project_name}.{dataset_name}.fridge_items'
     recipe_ingredients_table = f'{project_name}.{dataset_name}.recipe_ingredients'
+    flyer_table = f'{project_name}.{dataset_name}.flyer_data'
 
     # SQLクエリ
     demo_query = f"SELECT * FROM `{demo_table}`"
     fridge_items_query = f"SELECT * FROM `{fridge_items_table}`"
     recipe_ingredients_query = f"SELECT * FROM `{recipe_ingredients_table}`"
+    flyer_query = f"SELECT * FROM `{flyer_table}`"
 
     # データの読み込み（pandas_gbqを使用）
     demo = pandas_gbq.read_gbq(
@@ -205,8 +208,13 @@ def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         project_id=project_name,
         dialect='standard'
     )
+    flyer = pandas_gbq.read_gbq(
+        flyer_query.replace('\n', ' ').replace('\u3000', ''),
+        project_id=project_name,
+        dialect='standard'
+    )
 
-    return demo, fridge_items, recipe_ingredients
+    return demo, fridge_items, recipe_ingredients, flyer
 
 def generate_menu(processor: GeminiProcessor, human_prompt: str) -> pd.DataFrame:
     """
@@ -240,7 +248,7 @@ def generate_menu(processor: GeminiProcessor, human_prompt: str) -> pd.DataFrame
 
     return result_df
 
-def parse_menu_json(raw_json: str | dict) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def parse_menu_json(raw_json: Union[str, dict]) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     メニューJSONを
     ├ header_df      : タイトル／ジャンル／調理時間
@@ -251,7 +259,7 @@ def parse_menu_json(raw_json: str | dict) -> tuple[pd.DataFrame, pd.DataFrame, p
 
     Parameters
     ----------
-    raw_json : str | dict
+    raw_json : Union[str, dict]
         メニューJSON（文字列または辞書）
 
     Returns
@@ -396,7 +404,7 @@ def main() -> None:
         processor = create_processor()
 
         # BigQueryからデータを読み込む
-        demo, fridge_items, recipe_ingredients = load_bigquery_data()
+        demo, fridge_items, recipe_ingredients, flyer = load_bigquery_data()
 
         # メニュー生成用のプロンプト作成
         human_prompt = f"""
@@ -408,7 +416,10 @@ def main() -> None:
         2. レシピの材料：
         {recipe_ingredients.to_string()}
 
-        3. その他の条件：
+        3. フライヤーのデータ：
+        {flyer.to_string()}
+
+        4. その他の条件：
         - 調理時間は30分以内
         - 栄養バランスを考慮
         - 簡単な手順で作れる料理

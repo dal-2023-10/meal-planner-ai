@@ -68,6 +68,7 @@ class GeminiProcessor:
     def __init__(
         self,
         api_key_env: str = "GOOGLE_API_KEY",
+        # model_name: str = "models/gemini-2.0-flash",
         model_name: str = "models/gemini-2.5-flash-preview-05-20",
         options: GeminiOptions = GeminiOptions(),  
         project_id: Optional[str] = None,
@@ -182,7 +183,7 @@ RESPONSE_SCHEMA = {
 # システムプロンプト
 SYSTEM_PROMPT = """
 あなたは「パーソナル栄養プランナーAI」です。
-以下の条件に従って、1食分の献立をJSON形式で出力してください。
+以下の条件に従って、献立をJSON形式で出力してください。
 
 【役割】
 - 目的: ユーザーの食事目標を最小の手間で達成する献立を作成する。
@@ -273,7 +274,7 @@ def create_processor() -> GeminiProcessor:
 
     return GeminiProcessor(options=opts)
 
-def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_bigquery_data() -> pd.DataFrame:
     """
     BigQueryからデータを読み込む
 
@@ -287,13 +288,20 @@ def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
     # テーブル名の設定
     demo_table = f'{project_name}.{dataset_name}.demo'
-    fridge_items_table = f'{project_name}.{dataset_name}.fridge_items'
-    recipe_ingredients_table = f'{project_name}.{dataset_name}.recipe_ingredients'
+    # fridge_items_table = f'{project_name}.{dataset_name}.fridge_items'
+    # recipe_ingredients_table = f'{project_name}.{dataset_name}.recipe_ingredients'
 
-    # SQLクエリ
-    demo_query = f"SELECT * FROM `{demo_table}`"
-    fridge_items_query = f"SELECT * FROM `{fridge_items_table}`"
-    recipe_ingredients_query = f"SELECT * FROM `{recipe_ingredients_table}`"
+    # サブクエリで最新のcreated_atだけ取得
+    demo_query = f"""
+        SELECT *
+        FROM `{demo_table}`
+        WHERE created_at = (
+            SELECT MAX(created_at)
+            FROM `{demo_table}`
+        )
+    """
+    # fridge_items_query = f"SELECT * FROM `{fridge_items_table}`"
+    # recipe_ingredients_query = f"SELECT * FROM `{recipe_ingredients_table}`"
 
     # データの読み込み（pandas_gbqを使用）
     demo = pandas_gbq.read_gbq(
@@ -301,18 +309,18 @@ def load_bigquery_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         project_id=project_name,
         dialect='standard'
     )
-    fridge_items = pandas_gbq.read_gbq(
-        fridge_items_query.replace('\n', ' ').replace('\u3000', ''),
-        project_id=project_name,
-        dialect='standard'
-    )
-    recipe_ingredients = pandas_gbq.read_gbq(
-        recipe_ingredients_query.replace('\n', ' ').replace('\u3000', ''),
-        project_id=project_name,
-        dialect='standard'
-    )
+    # fridge_items = pandas_gbq.read_gbq(
+    #     fridge_items_query.replace('\n', ' ').replace('\u3000', ''),
+    #     project_id=project_name,
+    #     dialect='standard'
+    # )
+    # recipe_ingredients = pandas_gbq.read_gbq(
+    #     recipe_ingredients_query.replace('\n', ' ').replace('\u3000', ''),
+    #     project_id=project_name,
+    #     dialect='standard'
+    # )
 
-    return demo, fridge_items, recipe_ingredients
+    return demo #  ,fridge_items, recipe_ingredients
 
 def generate_menu(processor: GeminiProcessor, human_prompt: str) -> pd.DataFrame:
     """
@@ -490,65 +498,6 @@ def update_inventory(
         inventory_table = f"{project_name}.{dataset_name}.inventory_updates"
         pandas_gbq.to_gbq(inventory_df, inventory_table, project_id=project_name, if_exists="append")
 
-def main() -> None:
-    """
-    メイン処理
-    """
-    try:
-        # 環境設定
-        setup_environment()
-
-        # GeminiProcessorの初期化
-        processor = create_processor()
-
-        # BigQueryからデータを読み込む
-        demo, fridge_items, recipe_ingredients = load_bigquery_data()
-
-        # メニュー生成用のプロンプト作成
-        human_prompt = f"""
-        以下の条件でメニューを生成してください：
-
-        1. 冷蔵庫にある材料：
-        {fridge_items.to_string()}
-
-        2. レシピの材料：
-        {recipe_ingredients.to_string()}
-
-        3. その他の条件：
-        - 調理時間は30分以内
-        - 栄養バランスを考慮
-        - 簡単な手順で作れる料理
-        """
-
-        # メニュー生成
-        result_df = generate_menu(processor, pd.DataFrame({"prompt": [human_prompt]}))
-
-        # メニューJSONの解析
-        header_df, nutrition_df, ingredients_df, instructions_df = parse_menu_json(result_df.loc[0, "output"])
-
-        # 結果の表示
-        print("\n=== 生成されたメニュー ===")
-        print("\n基本情報:")
-        print(header_df)
-        print("\n栄養情報:")
-        print(nutrition_df)
-        print("\n材料:")
-        print(ingredients_df)
-        print("\n調理手順:")
-        print(instructions_df)
-
-        # BigQueryに保存
-        save_to_bigquery(header_df, nutrition_df, ingredients_df, instructions_df)
-
-        # 在庫の更新
-        update_inventory(ingredients_df)
-
-    except Exception as e:
-        print(f"エラーが発生しました: {str(e)}", file=sys.stderr)
-        sys.exit(1)
-
-
-
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -571,30 +520,51 @@ class MenuRequest(BaseModel):
 
 @app.post("/generate")
 def generate_menu_endpoint(req: MenuRequest):
+    """
+    メイン処理
+    """
     try:
-        # BigQueryからデータを読み込む
-        demo, fridge_items, recipe_ingredients = load_bigquery_data()
+        # データ読み込み
+        demo = load_bigquery_data()
+        num_people = len(demo)
 
-        # メニュー生成用のプロンプト作成
+        # ユーザーごとの属性まとめ
+        people_desc = []
+        for _, row in demo.iterrows():
+            dstyle = row.get("dietary_style", "")
+            gender = row.get("gender", "")
+            age = row.get("age", "")
+            line = f"・性別: {gender}、年齢: {age}"
+            if pd.notna(dstyle) and dstyle:
+                line += f"、食事スタイル: {dstyle}"
+            people_desc.append(line)
+        people_block = "\n".join(people_desc)
+
+        # プロンプト生成
         human_prompt = f"""
-        以下の条件でメニューを生成してください：
+        以下の条件で {num_people}人分のメニューを生成してください：
+        ## 対象者の情報
+        {people_block}
 
-        1. 冷蔵庫にある材料：
-        {fridge_items.to_string()}
-
-        2. レシピの材料：
-        {recipe_ingredients.to_string()}
-
-        3. その他の条件：
+        ## その他の条件：
         - 調理時間は30分以内
         - 栄養バランスを考慮
-        - 簡単な手順で作れる料理
         """
 
-        result_df = generate_menu(processor, pd.DataFrame({"prompt": [human_prompt]}))
+        # Gemini呼び出し
+        result_df = generate_menu(processor, human_prompt)
         header_df, nutrition_df, ingredients_df, instructions_df = parse_menu_json(result_df.loc[0, "output"])
-        save_to_bigquery(header_df, nutrition_df, ingredients_df, instructions_df)
-        # 8. 結果返却
+        # # 結果の表示
+        # print("\n=== 生成されたメニュー ===")
+        # print("\n基本情報:")
+        # print(header_df)
+        # print("\n栄養情報:")
+        # print(nutrition_df)
+        # print("\n材料:")
+        # print(ingredients_df)
+        # print("\n調理手順:")
+        # print(instructions_df)
+        
         return {
             "header": header_df.to_dict(orient="records"),
             "nutrition": nutrition_df.to_dict(orient="records"),

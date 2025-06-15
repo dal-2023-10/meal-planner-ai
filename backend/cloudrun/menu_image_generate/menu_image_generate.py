@@ -500,12 +500,13 @@ def update_inventory(
         pandas_gbq.to_gbq(inventory_df, inventory_table, project_id=project_name, if_exists="append")
 
 
-def generate_food_image(recipe_title: str) -> str:
+def generate_food_image(recipe_title: str, ingredient_list: list[str]) -> str:
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     genai.configure(api_key=GOOGLE_API_KEY)
-
+    # 材料リストを英文で
+    ingredient_text = ", ".join(ingredient_list)
     prompt = (
-        f"High quality food photograph, {recipe_title}, beautiful plating, Japanese cuisine, "
+        f"High quality food photograph, {recipe_title}, ingredients: {ingredient_text}, beautiful plating, Japanese cuisine, "
         "shot from above, natural lighting, plain background, no watermark, no text, no logo. "
         "Respond ONLY with a PNG image as base64, NO description, NO explanation, NO text."
     )
@@ -601,9 +602,10 @@ def generate_with_image(req: MenuRequest):
         print("Gemini output:", result_df.loc[0, "output"])
         header_df, nutrition_df, ingredients_df, instructions_df = parse_menu_json(result_df.loc[0, "output"])
 
-        # 2. 画像生成（タイトルを使う）
+        # 2. 画像生成（材料・タイトルを使う）
+        ingredient_names = [row["name"] for _, row in ingredients_df.iterrows()]
         recipe_title = header_df.iloc[0]["title"]
-        image_base64 = generate_food_image(recipe_title)
+        image_base64 = generate_food_image(recipe_title, ingredient_names)
         print(image_base64)
         
 

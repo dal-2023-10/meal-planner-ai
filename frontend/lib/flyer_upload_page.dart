@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'recipe_suggestions_page.dart';
+import 'loading_page.dart';
 
 class FlyerUploadPage extends StatefulWidget {
   const FlyerUploadPage({super.key});
@@ -63,7 +64,8 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
   Future<Map<String, dynamic>?> _fetchRecipeSuggestions() async {
     try {
       final response = await http.post(
-        Uri.parse('https://meal-planner-ai-418875428443.asia-northeast1.run.app/generate'),
+        // Uri.parse('https://meal-planner-ai-418875428443.asia-northeast1.run.app/generate'),
+        Uri.parse('https://menu-image-generate-418875428443.asia-northeast1.run.app/generate_with_image'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'prompt': 'ユーザー入力をもとに適当にpromptを組み立てて渡す（またはそのままinputDataを送るなど）',
@@ -137,16 +139,25 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
                   child: const Text('送信'),
                 ),
                 OutlinedButton(
-                  onPressed: () async {
-                    final recipeJson = await _fetchRecipeSuggestions();
-                    if (recipeJson != null && mounted) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoadingPage(
+                          onProcess: () async {
+                            return await _fetchRecipeSuggestions();
+                          },
+                          onComplete: (recipeJson) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    }
+                      ),
+                    );
                   },
                   child: const Text('登録しない'),
                 ),

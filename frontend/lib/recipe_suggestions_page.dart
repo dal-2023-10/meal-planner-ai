@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'input_form_page.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -47,27 +51,56 @@ class RecipeDetailPage extends StatelessWidget {
   final Map<String, dynamic> recipe;
   const RecipeDetailPage({super.key, required this.recipe});
 
-  @override
-  Widget build(BuildContext context) {
-    // データを安全に取り出し
-    final header = (recipe["header"] as List?)?.isNotEmpty == true ? recipe["header"][0] : {};
-    final nutrition = (recipe["nutrition"] as List?)?.isNotEmpty == true ? recipe["nutrition"][0] : {};
-    final ingredients = (recipe["ingredients"] as List?) ?? [];
-    final instructions = (recipe["instructions"] as List?) ?? [];
+  // @override
+  // Widget build(BuildContext context) {
+  //   // データを安全に取り出し
+  //   final header = (recipe["header"] as List?)?.isNotEmpty == true ? recipe["header"][0] : {};
+  //   final nutrition = (recipe["nutrition"] as List?)?.isNotEmpty == true ? recipe["nutrition"][0] : {};
+  //   final ingredients = (recipe["ingredients"] as List?) ?? [];
+  //   final instructions = (recipe["instructions"] as List?) ?? [];
 
-    return Scaffold(
-      appBar: AppBar(title: Text('🍴${header["title"] ?? ""}')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            // 完成イメージを先頭へ & 高さ調整
-            Container(
-              height: 160,
-              color: Colors.grey[300],
-              alignment: Alignment.center,
-              child: const Text('📸 完成イメージ'),
-            ),
+  //   return Scaffold(
+  //     appBar: AppBar(title: Text('🍴${header["title"] ?? ""}')),
+  //     body: Padding(
+  //       padding: const EdgeInsets.all(16.0),
+  //       child: ListView(
+  //         children: [
+  //           // 完成イメージを先頭へ & 高さ調整
+  //           Container(
+  //             height: 160,
+  //             color: Colors.grey[300],
+  //             alignment: Alignment.center,
+  //             child: const Text('📸 完成イメージ'),
+  //           ),
+    @override
+    Widget build(BuildContext context) {
+      final header = (recipe["header"] as List?)?.isNotEmpty == true ? recipe["header"][0] : {};
+      final nutrition = (recipe["nutrition"] as List?)?.isNotEmpty == true ? recipe["nutrition"][0] : {};
+      final ingredients = (recipe["ingredients"] as List?) ?? [];
+      final instructions = (recipe["instructions"] as List?) ?? [];
+
+      // ここで image_base64 を取得
+      final imageBase64 = recipe['image_base64'];
+      Uint8List? imageBytes;
+      if (imageBase64 != null && imageBase64 is String && imageBase64.isNotEmpty) {
+        imageBytes = base64Decode(imageBase64);
+      }
+
+      return Scaffold(
+        appBar: AppBar(title: Text('🍴${header["title"] ?? ""}')),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            children: [
+              // 完成イメージ画像を表示
+              Container(
+                height: 160,
+                color: Colors.grey[300],
+                alignment: Alignment.center,
+                child: imageBytes != null
+                    ? Image.memory(imageBytes, fit: BoxFit.cover, height: 160)
+                    : const Text('📸 完成イメージ'),
+              ),
             const SizedBox(height: 20),
 
             Text('🍚 調理時間：${header["total_time_min"] ?? "-"}分', style: const TextStyle(fontSize: 16)),
@@ -137,9 +170,10 @@ class RecipeDetailPage extends StatelessWidget {
             icon: const Icon(Icons.home),
             label: const Text('トップに戻る'),
             onPressed: () {
-              Navigator.push(
+              Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => const TopPage()),
+                MaterialPageRoute(builder: (context) => const InputFormPage()),
+                (route) => false, // これで全画面をリセットして本当の「トップ」に戻る
               );
             },
           ),

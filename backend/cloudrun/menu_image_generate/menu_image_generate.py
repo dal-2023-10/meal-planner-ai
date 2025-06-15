@@ -19,7 +19,7 @@ from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
 from google import generativeai as genai        
 from google.generativeai import GenerationConfig  
-from google.genai import types
+# from google.genai import types
 import logging
 
 # ロギングの設定

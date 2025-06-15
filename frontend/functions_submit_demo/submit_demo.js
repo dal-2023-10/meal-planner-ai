@@ -46,6 +46,8 @@ app.post('/submit', async (req, res) => {
     const ages = data.ages || [];
     const genders = data.genders || [];
     const preferences = data.preferences || [];
+    const selectedCookingTime = data.selectedCookingTime || null;
+    const todayFeeling = data.todayFeeling || null;
 
     // 各 gender ごとにレコードを作成
     for (let i = 0; i < genders.length; i++) {
@@ -56,6 +58,8 @@ app.post('/submit', async (req, res) => {
         gender: genders[i],
         dietary_style: preferences[i].join(','), // ARRAY<STRING> を想定
         created_at: new Date().toISOString(),
+        cooking_time:selectedCookingTime,
+        feeling:todayFeeling
       };
 
       rows.push(row);

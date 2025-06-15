@@ -1,9 +1,10 @@
-import 'dart:io' show File, Platform;
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:firebase_storage/firebase_storage.dart';
 import 'recipe_suggestions_page.dart';
 
 class FlyerUploadPage extends StatefulWidget {
@@ -14,16 +15,92 @@ class FlyerUploadPage extends StatefulWidget {
 }
 
 class _FlyerUploadPageState extends State<FlyerUploadPage> {
-  List<XFile> _images = [];
+  List<XFile> _selectedImages = [];
 
+  /// 画像を複数選択する
   Future<void> _pickImages() async {
-    final pickedFiles = await ImagePicker().pickMultiImage(
-      imageQuality: 85,
-    ); // JPEG・PNG 両対応
+    final pickedFiles = await ImagePicker().pickMultiImage(imageQuality: 85);
     if (pickedFiles.isNotEmpty) {
       setState(() {
-        _images = pickedFiles;
+        _selectedImages = pickedFiles;
       });
+    }
+  }
+
+  /// Firebase Storage に画像をアップロードし、URLのリストを返す
+  Future<List<String>> _uploadImagesToFirebase(List<XFile> images) async {
+    final storage = FirebaseStorage.instance;
+    List<String> downloadUrls = [];
+
+    for (final image in images) {
+      final fileName = '${DateTime.now()}.jpg';
+      final ref = storage.ref().child('flyers/$fileName');
+
+      try {
+        debugPrint('アップロード中: ${image.name}');
+
+        if (kIsWeb) {
+          final bytes = await image.readAsBytes();
+          final uploadTask = await ref.putData(
+            bytes,
+            SettableMetadata(contentType: 'image/jpeg'),
+          );
+          final url = await uploadTask.ref.getDownloadURL();
+          downloadUrls.add(url);
+          debugPrint('アップロード成功: $url');
+        }
+      } on FirebaseException catch (e) {
+        debugPrint('Firebaseエラー: ${e.code} - ${e.message}');
+      } catch (e) {
+        debugPrint('その他のエラー: $e');
+      }
+    }
+
+    return downloadUrls;
+  }
+
+  /// Cloud Run API からレシピを生成
+  Future<Map<String, dynamic>?> _fetchRecipeSuggestions() async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://meal-planner-ai-418875428443.asia-northeast1.run.app/generate'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'prompt': 'ユーザー入力をもとに適当にpromptを組み立てて渡す（またはそのままinputDataを送るなど）',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('API成功: ${response.body}');
+        return jsonDecode(response.body);
+      } else {
+        debugPrint('APIエラー: ${response.statusCode}, ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('通信エラー: $e');
+      return null;
+    }
+  }
+
+  /// アップロード後に遷移
+  Future<void> _handleUploadAndNavigate() async {
+    debugPrint('選択された画像枚数: ${_selectedImages.length}');
+
+    final urls = await _uploadImagesToFirebase(_selectedImages);
+    debugPrint('アップロードされたURL: $urls');
+
+    final recipeJson = await _fetchRecipeSuggestions();
+
+    if (recipeJson != null) {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailPage(recipe: recipeJson),
+          ),
+        );
+      }
     }
   }
 
@@ -40,16 +117,12 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
               child: const Text('画像を選択（複数可）'),
             ),
             const SizedBox(height: 16),
-            _images.isNotEmpty
+            _selectedImages.isNotEmpty
                 ? Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: _images
-                        .map(
-                          (img) => kIsWeb || Platform.isIOS
-                              ? Image.network(img.path, height: 100)
-                              : Image.file(File(img.path), height: 100),
-                        )
+                    children: _selectedImages
+                        .map((img) => Image.network(img.path, height: 100))
                         .toList(),
                   )
                 : const Text('画像が選択されていません'),
@@ -58,45 +131,21 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: _images.isEmpty
+                  onPressed: _selectedImages.isEmpty
                       ? null
-                      : () {
-                          debugPrint('画像枚数: ${_images.length}');
-                          // TODO: Cloud Storage 等へのアップロード処理
-                          Navigator.pop(context);
-                        },
+                      : () => _handleUploadAndNavigate(),
                   child: const Text('送信'),
                 ),
                 OutlinedButton(
                   onPressed: () async {
-                    // 例: APIリクエスト
-                    final response = await http.post(
-                      Uri.parse('https://meal-planner-ai-418875428443.asia-northeast1.run.app/generate'),
-                      headers: {'Content-Type': 'application/json'},
-                      body: jsonEncode({
-                        'prompt': 'ユーザー入力をもとに適当にpromptを組み立てて渡す（またはそのままinputDataを送るなど）',
-                      }),
-                    );
-
-                    debugPrint('API status: ${response.statusCode}');
-                    debugPrint('API body: ${response.body}');
-
-                    if (response.statusCode == 200) {
-                      final recipeJson = jsonDecode(response.body);
-
-                      // 👇 ここで型も出す
-                      debugPrint('runtimeType: ${recipeJson.runtimeType}');
-                      debugPrint('recipeJson: $recipeJson');
-
+                    final recipeJson = await _fetchRecipeSuggestions();
+                    if (recipeJson != null && mounted) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => RecipeDetailPage(recipe: recipeJson),
                         ),
                       );
-                    } else {
-                      debugPrint('API error: ${response.statusCode}, body: ${response.body}');
-                      // エラー処理
                     }
                   },
                   child: const Text('登録しない'),

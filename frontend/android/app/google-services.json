@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "418875428443",
+    "project_id": "dal-ai-agent-hackathon",
+    "storage_bucket": "dal-ai-agent-hackathon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:418875428443:android:120a22bf1d2ff88753797e",
+        "android_client_info": {
+          "package_name": "com.example.my_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1AVngUlxfMK85d8s7GokN0Y6oxvX_2y8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

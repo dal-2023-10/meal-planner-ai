@@ -13,7 +13,7 @@ const bigquery = new BigQuery();
 
 // 🔧 使用するデータセットとテーブル名
 const datasetId = 'meal_planner';
-const tableId = 'demo';
+const tableId = 'Demo_Remake';
 
 // ランダムな16文字の英数字を生成する関数
 function generateRandomId(length = 16) {
@@ -39,23 +39,36 @@ app.use((req, res, next) => {
 app.post('/submit', async (req, res) => {
   try {
     const data = req.body;
+    console.log('📨 受け取ったデータ:', data);
 
-    const row = {
-      user_id: generateRandomId(),
-      name: null,
-      age: JSON.stringify(data.age),
-      gender: JSON.stringify(data.gender),
-      dietary_style: JSON.stringify(data.preferences),
-      created_at: new Date().toISOString(),
-    };
+    const rows = [];
 
-    await bigquery.dataset(datasetId).table(tableId).insert(row);
+    const ages = data.ages || [];
+    const genders = data.genders || [];
+    const preferences = data.preferences || [];
+
+    // 各 gender ごとにレコードを作成
+    for (let i = 0; i < genders.length; i++) {
+      const row = {
+        user_id: generateRandomId(), // ✅ 毎回ユニークなID
+        name: null,
+        age: ages[i] || null, // 同じ長さでなければ null
+        gender: genders[i],
+        dietary_style: preferences[i].join(','), // ARRAY<STRING> を想定
+        created_at: new Date().toISOString(),
+      };
+
+      rows.push(row);
+    }
+
+    console.log('📦 BigQueryに送るrows:', rows);
+
+    await bigquery.dataset(datasetId).table(tableId).insert(rows);
     console.log('BigQuery insert succeeded.');
 
     res.status(200).send('Data inserted successfully.');
   } catch (error) {
     if (error.name === 'PartialFailureError') {
-      // エラーの詳細をログに出す
       error.errors.forEach(err => {
         console.error('Insert error row:', err.row);
         console.error('Insert error reason:', err.errors);
@@ -66,6 +79,7 @@ app.post('/submit', async (req, res) => {
     res.status(500).send('BigQuery insert failed');
   }
 });
+
 
 
 // 🚀 サーバー起動（Cloud Runなどで使用するポート）

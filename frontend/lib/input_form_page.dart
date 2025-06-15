@@ -214,6 +214,8 @@ class _InputFormPageState extends State<InputFormPage> {
                       // 'todayFeeling': todayFeeling,
                     };
 
+                    debugPrint('送信データ: ${jsonEncode(data)}'); // ← ここ追加
+                    
                     final url = Uri.parse('https://submit-demo-418875428443.us-central1.run.app/submit');
 
                     try {

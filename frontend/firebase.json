@@ -1,4 +1,43 @@
 {
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "dal-ai-agent-hackathon",
+          "appId": "1:418875428443:android:120a22bf1d2ff88753797e",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "dal-ai-agent-hackathon",
+          "appId": "1:418875428443:ios:b180a7d4d4522b8453797e",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "dal-ai-agent-hackathon",
+          "appId": "1:418875428443:ios:b180a7d4d4522b8453797e",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "dal-ai-agent-hackathon",
+          "configurations": {
+            "android": "1:418875428443:android:120a22bf1d2ff88753797e",
+            "ios": "1:418875428443:ios:b180a7d4d4522b8453797e",
+            "macos": "1:418875428443:ios:b180a7d4d4522b8453797e",
+            "web": "1:418875428443:web:91bc6d28fdfb5b5953797e",
+            "windows": "1:418875428443:web:a34d6e7ec3e01bbf53797e"
+          }
+        }
+      }
+    }
+  },
   "hosting": {
     "public": "build/web",
     "ignore": [

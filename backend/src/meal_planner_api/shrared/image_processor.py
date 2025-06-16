@@ -135,12 +135,16 @@ class ImageProcessor:
 - 上記のJSON形式以外の文章は含めないでください
 """
     
-    def get_latest_image_path(self, prefix: str = "") -> Optional[str]:
+    # ─────────────────────────────────────────────
+    # 1. 画像取得関連のメソッド
+    # ─────────────────────────────────────────────
+    def get_latest_image_path(self, prefix: str = "", target_date: str = None) -> Optional[str]:
         """
         FireStorageから最新の画像ファイルのパスを取得する
 
         Args:
             prefix (str): 検索対象のフォルダパス（例: "images/"）
+            target_date (str): 対象日付（YYYY-MM-DD形式）。指定しない場合は最新の画像を返す
 
         Returns:
             Optional[str]: 最新の画像ファイルのパス。見つからない場合はNone
@@ -156,6 +160,12 @@ class ImageProcessor:
             for blob in blobs:
                 # 画像ファイルの拡張子をチェック
                 if any(blob.name.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif']):
+                    # ファイル名から日付を抽出
+                    filename = blob.name.split('/')[-1]
+                    if target_date:
+                        if not filename.startswith(target_date):
+                            continue
+                    
                     if latest_time is None or blob.updated > latest_time:
                         latest_blob = blob
                         latest_time = blob.updated
@@ -167,18 +177,41 @@ class ImageProcessor:
         except Exception as e:
             print(f"Error getting latest image path from FireStorage: {e}")
             return None
+    def get_today_latest_image_path(self) -> Optional[str]:
+        """
+        当日の最新の画像ファイルのパスを取得する
 
-    def get_latest_image(self, prefix: str = "") -> Optional[Image.Image]:
+        Returns:
+            Optional[str]: 当日の最新の画像ファイルのパス。見つからない場合はNone
+        """
+        from datetime import datetime
+        today = datetime.now().strftime('%Y-%m-%d')
+        return self.get_latest_image_path(prefix="flyers/", target_date=today)
+
+    def get_today_latest_image(self) -> Optional[Image.Image]:
+        """
+        当日の最新の画像を取得する
+
+        Returns:
+            Optional[Image.Image]: 当日の最新の画像のPILオブジェクト。失敗時はNone
+        """
+        latest_path = self.get_today_latest_image_path()
+        if latest_path:
+            return self.get_image_from_storage(latest_path)
+        return None
+
+    def get_latest_image(self, prefix: str = "", target_date: str = None) -> Optional[Image.Image]:
         """
         FireStorageから最新の画像を取得する
 
         Args:
             prefix (str): 検索対象のフォルダパス（例: "images/"）
+            target_date (str): 対象日付（YYYY-MM-DD形式）。指定しない場合は最新の画像を返す
 
         Returns:
             Optional[Image.Image]: 最新の画像のPILオブジェクト。失敗時はNone
         """
-        latest_path = self.get_latest_image_path(prefix)
+        latest_path = self.get_latest_image_path(prefix, target_date)
         if latest_path:
             return self.get_image_from_storage(latest_path)
         return None
@@ -206,6 +239,9 @@ class ImageProcessor:
             print(f"Error loading image from FireStorage: {str(e)}")
             return None
 
+    # ─────────────────────────────────────────────
+    # 2. 画像処理関連のメソッド
+    # ─────────────────────────────────────────────
     def pil_image_to_gemini_part(self, image: Image.Image) -> dict:
         """
         PIL Image を Gemini に渡せるバイナリ形式に変換
@@ -224,6 +260,9 @@ class ImageProcessor:
             "data": byte_data
         }
     
+    # ─────────────────────────────────────────────
+    # 3. 画像認識関連のメソッド
+    # ─────────────────────────────────────────────
     def Image_recognition(self, prompt: str = "", image: Optional[Image.Image] = None) -> Optional[dict]:
         if not prompt:
             prompt = self.prompt
@@ -344,6 +383,7 @@ class ImageProcessor:
             print(f"画像認識中にエラーが発生しました: {str(e)}")
             return None
         
+
 
         
         

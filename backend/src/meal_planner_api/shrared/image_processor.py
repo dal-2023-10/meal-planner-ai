@@ -21,38 +21,6 @@ from datetime import datetime, timezone
 # ─────────────────────────────────────────────
 # 1. モデル向けパラメータを "全部入り" で保持する dataclass
 # ─────────────────────────────────────────────
-@dataclass
-class GeminiOptions:
-    # ── GenerationConfig パラメータ ─────────────────────────
-    temperature: float = 0.7
-    top_p: float = 0.8
-    top_k: int = 40
-    candidate_count: int = 1
-    max_output_tokens: int = 2048
-    stop_sequences: Optional[List[str]] = None
-    presence_penalty: float = 0.0
-    frequency_penalty: float = 0.0
-
-    # ── 追加オプション ──────────────────────────────────────
-    system_instruction: Optional[str] = None
-    safety_settings: Optional[List[Dict[str, Any]]] = None
-    tools: Optional[List[Dict[str, Any]]] = None
-    response_mime_type: Optional[str] = "application/json"
-    response_schema: Optional[Dict[str, Any]] = None
-
-    def to_generation_config(self) -> GenerationConfig:
-        return GenerationConfig(
-            temperature        = self.temperature,
-            top_p              = self.top_p,
-            top_k              = self.top_k,
-            candidate_count    = self.candidate_count,
-            max_output_tokens  = self.max_output_tokens,
-            stop_sequences     = self.stop_sequences or None,
-            presence_penalty   = self.presence_penalty or None,
-            frequency_penalty  = self.frequency_penalty or None,
-            response_mime_type = self.response_mime_type or None,
-            response_schema    = self.response_schema or None,
-        )
 
 @dataclass
 class GeminiOptions_image:
@@ -61,7 +29,7 @@ class GeminiOptions_image:
     top_p: float = 1.0
     top_k: int = 1
     candidate_count: int = 1
-    max_output_tokens: int = 8192
+    max_output_tokens: int = 65535
     stop_sequences: Optional[List[str]] = None
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
@@ -275,7 +243,7 @@ class ImageProcessor:
                 temperature=0.1,  # より決定論的な出力のために温度を下げる
                 top_p=1,
                 top_k=1,
-                max_output_tokens=8192,
+                max_output_tokens=65535,
                 candidate_count=1
             )
 

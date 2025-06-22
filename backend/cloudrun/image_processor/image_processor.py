@@ -7,7 +7,6 @@ from google import generativeai as genai
 from google.generativeai import GenerationConfig  
 
 from PIL import Image
-from PIL import Image
 from io import BytesIO
 import firebase_admin
 from firebase_admin import credentials, storage
@@ -177,28 +176,6 @@ class ImageProcessor:
         except Exception as e:
             print(f"Error getting latest image path from FireStorage: {e}")
             return None
-    def get_today_latest_image_path(self) -> Optional[str]:
-        """
-        当日の最新の画像ファイルのパスを取得する
-
-        Returns:
-            Optional[str]: 当日の最新の画像ファイルのパス。見つからない場合はNone
-        """
-        from datetime import datetime
-        today = datetime.now().strftime('%Y-%m-%d')
-        return self.get_latest_image_path(prefix="flyers/", target_date=today)
-
-    def get_today_latest_image(self) -> Optional[Image.Image]:
-        """
-        当日の最新の画像を取得する
-
-        Returns:
-            Optional[Image.Image]: 当日の最新の画像のPILオブジェクト。失敗時はNone
-        """
-        latest_path = self.get_today_latest_image_path()
-        if latest_path:
-            return self.get_image_from_storage(latest_path)
-        return None
 
     def get_latest_image(self, prefix: str = "", target_date: str = None) -> Optional[Image.Image]:
         """
@@ -383,6 +360,35 @@ class ImageProcessor:
             print(f"画像認識中にエラーが発生しました: {str(e)}")
             return None
         
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+) # テスト用のCORSを許可
+
+load_dotenv()
+class ImageRequest(BaseModel):
+    prompt: str
+
+@app.post("/flyer_image_processor")
+def flyer_image_processor(req: ImageRequest):
+    try:
+        # ImageProcessorのインスタンスを作成
+        image_processor = ImageProcessor()
+        image_processor.Image_recognition()
+        return None
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 
 
         

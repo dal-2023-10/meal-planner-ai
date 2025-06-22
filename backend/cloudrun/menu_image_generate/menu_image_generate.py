@@ -297,10 +297,9 @@ def load_bigquery_data() -> pd.DataFrame:
     demo_query = f"""
         SELECT *
         FROM `{demo_table}`
-        WHERE created_at = (
-            SELECT MAX(created_at)
-            FROM `{demo_table}`
-        )
+        WHERE SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*S%Ez', created_at) IS NOT NULL
+        ORDER BY created_at DESC
+        LIMIT 1
     """
     # fridge_items_query = f"SELECT * FROM `{fridge_items_table}`"
     # recipe_ingredients_query = f"SELECT * FROM `{recipe_ingredients_table}`"

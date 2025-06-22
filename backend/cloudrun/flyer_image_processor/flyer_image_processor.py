@@ -269,10 +269,9 @@ def load_bigquery_data() -> pd.DataFrame:
     demo_query = f"""
         SELECT *
         FROM `{demo_table}`
-        WHERE created_at = (
-            SELECT MAX(created_at)
-            FROM `{demo_table}`
-        )
+        WHERE SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*S%Ez', created_at) IS NOT NULL
+        ORDER BY created_at DESC
+        LIMIT 1
     """
     demo = pandas_gbq.read_gbq(
         demo_query.replace('\n', ' ').replace('\u3000', ''),

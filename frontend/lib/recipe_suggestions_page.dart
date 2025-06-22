@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'input_form_page.dart';
+import 'package:http/http.dart' as http; 
 
 
 void main() {
@@ -182,10 +183,34 @@ class RecipeDetailPage extends StatelessWidget {
             heroTag: "save",
             icon: const Icon(Icons.save),
             label: const Text('レシピを保存'),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('レシピを保存しました（仮）')),
-              );
+            onPressed: () async {
+              final savePayload = {
+                "header": recipe["header"] ?? [],
+                "nutrition": recipe["nutrition"] ?? [],
+                "ingredients": recipe["ingredients"] ?? [],
+                "instructions": recipe["instructions"] ?? [],
+                // "user_id": "sample_user"  // ← 必要に応じて
+              };
+              try {
+                final response = await http.post(
+                  Uri.parse("https://bq-uplode-418875428443.asia-northeast1.run.app/save_recipe"),
+                  headers: {"Content-Type": "application/json"},
+                  body: jsonEncode(savePayload),
+                );
+                if (response.statusCode == 200) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('レシピを保存しました')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('保存失敗: ${response.statusCode}')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('通信エラー: $e')),
+                );
+              }
             },
           ),
         ],

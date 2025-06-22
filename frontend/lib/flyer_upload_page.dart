@@ -36,10 +36,8 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
     for (final image in images) {
       final fileName = '${DateTime.now()}.jpg';
       final ref = storage.ref().child('flyers/$fileName');
-
       try {
         debugPrint('アップロード中: ${image.name}');
-
         if (kIsWeb) {
           final bytes = await image.readAsBytes();
           final uploadTask = await ref.putData(
@@ -56,22 +54,17 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
         debugPrint('その他のエラー: $e');
       }
     }
-
     return downloadUrls;
   }
 
-  /// Cloud Run API からレシピを生成
-  Future<Map<String, dynamic>?> _fetchRecipeSuggestions() async {
+  /// 画像あり: チラシ情報アリAPI
+  Future<Map<String, dynamic>?> _fetchRecipeWithFlyer(List<String> flyerUrls) async {
     try {
       final response = await http.post(
-        // Uri.parse('https://meal-planner-ai-418875428443.asia-northeast1.run.app/generate'),
-        Uri.parse('https://menu-image-generate-418875428443.asia-northeast1.run.app/generate_with_image'),
+        Uri.parse('https://flyer-menu-generate-418875428443.asia-northeast1.run.app/generate_menu_from_flyer'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'prompt': 'ユーザー入力をもとに適当にpromptを組み立てて渡す（またはそのままinputDataを送るなど）',
-        }),
+        body: jsonEncode({'flyer_urls': flyerUrls}),
       );
-
       if (response.statusCode == 200) {
         debugPrint('API成功: ${response.body}');
         return jsonDecode(response.body);
@@ -85,24 +78,24 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
     }
   }
 
-  /// アップロード後に遷移
-  Future<void> _handleUploadAndNavigate() async {
-    debugPrint('選択された画像枚数: ${_selectedImages.length}');
-
-    final urls = await _uploadImagesToFirebase(_selectedImages);
-    debugPrint('アップロードされたURL: $urls');
-
-    final recipeJson = await _fetchRecipeSuggestions();
-
-    if (recipeJson != null) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => RecipeDetailPage(recipe: recipeJson),
-          ),
-        );
+  /// 画像なし: デモグラだけAPI
+  Future<Map<String, dynamic>?> _fetchRecipeWithoutFlyer() async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://non-flyer-menu-generate-418875428443.asia-northeast1.run.app/generate_with_image'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'prompt': '（ここに適宜フォームの内容など渡す）'}),
+      );
+      if (response.statusCode == 200) {
+        debugPrint('API成功: ${response.body}');
+        return jsonDecode(response.body);
+      } else {
+        debugPrint('APIエラー: ${response.statusCode}, ${response.body}');
+        return null;
       }
+    } catch (e) {
+      debugPrint('通信エラー: $e');
+      return null;
     }
   }
 
@@ -132,34 +125,69 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                // チラシ画像アリ: アップロードしてAPI
                 ElevatedButton(
                   onPressed: _selectedImages.isEmpty
                       ? null
-                      : () => _handleUploadAndNavigate(),
-                  child: const Text('送信'),
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoadingPage(
+                                onProcess: () async {
+                                  final urls = await _uploadImagesToFirebase(_selectedImages);
+                                  return await _fetchRecipeWithFlyer(urls);
+                                },
+                                onComplete: (recipeJson) {
+                                  if (recipeJson != null) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                                      ),
+                                    );
+                                  } else {
+                                    // エラー時の表示（任意で改良）
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('メニュー生成に失敗しました')),
+                                    );
+                                    Navigator.pop(context);
+                                  }
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                  child: const Text('画像でメニュー生成'),
                 ),
+                // チラシ登録しない: デモグラのみAPI
                 OutlinedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => LoadingPage(
-                          onProcess: () async {
-                            return await _fetchRecipeSuggestions();
-                          },
+                          onProcess: () async => await _fetchRecipeWithoutFlyer(),
                           onComplete: (recipeJson) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RecipeDetailPage(recipe: recipeJson),
-                              ),
-                            );
+                            if (recipeJson != null) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('メニュー生成に失敗しました')),
+                              );
+                              Navigator.pop(context);
+                            }
                           },
                         ),
                       ),
                     );
                   },
-                  child: const Text('登録しない'),
+                  child: const Text('画像なしで生成'),
                 ),
               ],
             ),

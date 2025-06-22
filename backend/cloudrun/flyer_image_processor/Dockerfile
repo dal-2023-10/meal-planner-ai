@@ -7,7 +7,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # アプリケーションコードをコピー
-COPY image_processor.py ./
+COPY flyer_image_processor.py ./
 
 # ログ出力（printデバッグ用）
 ENV PYTHONUNBUFFERED=1

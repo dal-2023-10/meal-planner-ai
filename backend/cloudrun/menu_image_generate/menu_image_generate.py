@@ -283,13 +283,13 @@ def load_bigquery_data() -> pd.DataFrame:
     Returns
     -------
     tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
-        (demo, fridge_items, recipe_ingredients)のタプル
+        (Demo_Remake, fridge_items, recipe_ingredients)のタプル
     """
     project_name = os.getenv('GOOGLE_CLOUD_PROJECT')
     dataset_name = os.getenv('BIGQUERY_DATASET')
 
     # テーブル名の設定
-    demo_table = f'{project_name}.{dataset_name}.demo'
+    demo_table = f'{project_name}.{dataset_name}.Demo_Remake'
     # fridge_items_table = f'{project_name}.{dataset_name}.fridge_items'
     # recipe_ingredients_table = f'{project_name}.{dataset_name}.recipe_ingredients'
 

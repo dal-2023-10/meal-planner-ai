@@ -258,8 +258,8 @@ class _InputFormPageState extends State<InputFormPage> {
       'ages': ages,
       // 'selectedAllergy': selectedAllergy,
       'preferences': selectedPreference,
-      // 'selectedCookingTime': selectedCookingTime,
-      // 'todayFeeling': todayFeeling,
+      'selectedCookingTime': selectedCookingTime,
+      'todayFeeling': todayFeeling,
     };
 
     try {

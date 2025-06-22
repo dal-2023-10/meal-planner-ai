@@ -208,6 +208,7 @@ SYSTEM_PROMPT = """
         "fat_g": 20,       // 数値（g）
         "carb_g": 45,      // 数値（g）
         "salt_g": 2.5      // 数値（g）
+        "fiber_g": 1.0     // 数値（g）
     }},
     "instructions": [
         "手順1",
@@ -579,22 +580,31 @@ def generate_with_image(req: MenuRequest):
         num_people = len(demo)
         people_desc = []
         for _, row in demo.iterrows():
-            dstyle = row.get("dietary_style", "")
             gender = row.get("gender", "")
             age = row.get("age", "")
+            dstyle = row.get("dietary_style", "")
+            feeling = row.get("feeling", "")
+            cooking_time = row.get("cooking_time", "")
+            # 1行ずつ情報をまとめる
             line = f"・性別: {gender}、年齢: {age}"
             if pd.notna(dstyle) and dstyle:
                 line += f"、食事スタイル: {dstyle}"
+            if pd.notna(feeling) and feeling:
+                line += f"、気分・要望: {feeling}"
+            if pd.notna(cooking_time) and cooking_time:
+                line += f"、希望調理時間: {cooking_time}"
             people_desc.append(line)
         people_block = "\n".join(people_desc)
+
+        # 3. プロンプト作成
         human_prompt = f"""
         以下の条件で {num_people}人分のメニューを生成してください：
+
         ## 対象者の情報
         {people_block}
 
-        ## その他の条件：
-        - 調理時間は30分以内
-        - 栄養バランスを考慮
+        ## その他の条件
+        - 栄養バランスを考慮すること
         """
 
         # Gemini呼び出し

@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # アプリケーションコードをコピー
 COPY flyer_image_processor.py ./
+COPY secrets/dal-ai-agent-hackathon-firebase-adminsdk-fbsvc-c51ab0ef20.json ./secrets/dal-ai-agent-hackathon-firebase-adminsdk-fbsvc-c51ab0ef20.json
 
 # ログ出力（printデバッグ用）
 ENV PYTHONUNBUFFERED=1

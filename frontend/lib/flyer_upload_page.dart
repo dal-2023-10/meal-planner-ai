@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'recipe_suggestions_page.dart';
 import 'loading_page.dart';
 
@@ -17,6 +19,10 @@ class FlyerUploadPage extends StatefulWidget {
 
 class _FlyerUploadPageState extends State<FlyerUploadPage> {
   List<XFile> _selectedImages = [];
+
+  static const Color accentColor = Color(0xFFFF8A80);
+  static const Color shadowColor = Color(0x33FF8A80);
+  static const Color bgColor = Color(0xFFFFF8E7);
 
   /// 画像を複数選択する
   Future<void> _pickImages() async {
@@ -34,7 +40,7 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
     List<String> downloadUrls = [];
 
     for (final image in images) {
-      final fileName = '${DateTime.now()}.jpg';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = storage.ref().child('flyers/$fileName');
       try {
         debugPrint('アップロード中: ${image.name}');
@@ -102,98 +108,246 @@ class _FlyerUploadPageState extends State<FlyerUploadPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('チラシの登録')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ElevatedButton(
-              onPressed: _pickImages,
-              child: const Text('画像を選択（複数可）'),
-            ),
-            const SizedBox(height: 16),
-            _selectedImages.isNotEmpty
-                ? Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: _selectedImages
-                        .map((img) => Image.network(img.path, height: 100))
-                        .toList(),
-                  )
-                : const Text('画像が選択されていません'),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // チラシ画像アリ: アップロードしてAPI
-                ElevatedButton(
-                  onPressed: _selectedImages.isEmpty
-                      ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoadingPage(
-                                onProcess: () async {
-                                  final urls = await _uploadImagesToFirebase(_selectedImages);
-                                  return await _fetchRecipeWithFlyer(urls);
-                                },
-                                onComplete: (recipeJson) {
-                                  if (recipeJson != null) {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => RecipeDetailPage(recipe: recipeJson),
-                                      ),
-                                    );
-                                  } else {
-                                    // エラー時の表示（任意で改良）
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('メニュー生成に失敗しました')),
-                                    );
-                                    Navigator.pop(context);
-                                  }
-                                },
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: bgColor,
+        title: Text(
+          'チラシ画像でメニュー作成',
+          style: GoogleFonts.mPlusRounded1c(
+            fontWeight: FontWeight.bold,
+            color: accentColor,
+            letterSpacing: 1.5,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 520),
+          padding: const EdgeInsets.all(32),
+          margin: const EdgeInsets.symmetric(vertical: 28, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 18,
+                offset: const Offset(3, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "手元のスーパーのチラシ画像をアップロードすると、\n特売食材を活かした献立を提案します🍅",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.mPlusRounded1c(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 22),
+              _ImageSelectButton(
+                onPressed: _pickImages,
+                accentColor: accentColor,
+              ),
+              const SizedBox(height: 16),
+              _selectedImages.isNotEmpty
+                  ? Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: _selectedImages
+                          .map(
+                            (img) => ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                img.path,
+                                height: 110,
+                                width: 110,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                          );
-                        },
-                  child: const Text('画像でメニュー生成'),
-                ),
-                // チラシ登録しない: デモグラのみAPI
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoadingPage(
-                          onProcess: () async => await _fetchRecipeWithoutFlyer(),
-                          onComplete: (recipeJson) {
-                            if (recipeJson != null) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RecipeDetailPage(recipe: recipeJson),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('メニュー生成に失敗しました')),
-                              );
-                              Navigator.pop(context);
-                            }
-                          },
+                          )
+                          .toList(),
+                    )
+                  : Text(
+                      '画像が選択されていません',
+                      style: GoogleFonts.mPlusRounded1c(color: Colors.black54),
+                    ),
+              const SizedBox(height: 28),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ActionButton(
+                    label: '画像でメニュー生成',
+                    icon: Icons.image_search,
+                    accentColor: accentColor,
+                    enabled: _selectedImages.isNotEmpty,
+                    onTap: () {
+                      if (_selectedImages.isEmpty) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoadingPage(
+                            onProcess: () async {
+                              final urls = await _uploadImagesToFirebase(_selectedImages);
+                              return await _fetchRecipeWithFlyer(urls);
+                            },
+                            onComplete: (recipeJson) {
+                              if (recipeJson != null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('メニュー生成に失敗しました', style: GoogleFonts.mPlusRounded1c()),
+                                  ),
+                                );
+                                Navigator.pop(context);
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const Text('画像なしで生成'),
-                ),
-              ],
-            ),
-          ],
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 18),
+                  _ActionButton(
+                    label: '画像なしで生成',
+                    icon: Icons.lightbulb_outline,
+                    accentColor: accentColor,
+                    outlined: true,
+                    enabled: true,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoadingPage(
+                            onProcess: () async => await _fetchRecipeWithoutFlyer(),
+                            onComplete: (recipeJson) {
+                              if (recipeJson != null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RecipeDetailPage(recipe: recipeJson),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('メニュー生成に失敗しました', style: GoogleFonts.mPlusRounded1c()),
+                                  ),
+                                );
+                                Navigator.pop(context);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+/// 柔らかい画像選択ボタン
+class _ImageSelectButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Color accentColor;
+
+  const _ImageSelectButton({
+    required this.onPressed,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: accentColor,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 28),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        textStyle: GoogleFonts.mPlusRounded1c(fontWeight: FontWeight.bold, fontSize: 16),
+      ),
+      icon: const Icon(Icons.add_photo_alternate),
+      label: const Text('画像を選択'),
+      onPressed: onPressed,
+    );
+  }
+}
+
+/// やさしいアクションボタン
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color accentColor;
+  final bool enabled;
+  final VoidCallback onTap;
+  final bool outlined;
+
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.accentColor,
+    required this.enabled,
+    required this.onTap,
+    this.outlined = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final buttonStyle = outlined
+        ? OutlinedButton.styleFrom(
+            side: BorderSide(color: accentColor, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            textStyle: GoogleFonts.mPlusRounded1c(fontWeight: FontWeight.bold, fontSize: 16),
+            foregroundColor: accentColor,
+            backgroundColor: Colors.transparent,
+          )
+        : ElevatedButton.styleFrom(
+            backgroundColor: accentColor,
+            foregroundColor: Colors.white,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            textStyle: GoogleFonts.mPlusRounded1c(fontWeight: FontWeight.bold, fontSize: 16),
+          );
+
+    return outlined
+        ? OutlinedButton.icon(
+            onPressed: enabled ? onTap : null,
+            style: buttonStyle,
+            icon: Icon(icon, color: accentColor),
+            label: Text(label),
+          )
+        : ElevatedButton.icon(
+            onPressed: enabled ? onTap : null,
+            style: buttonStyle,
+            icon: Icon(icon),
+            label: Text(label),
+          );
   }
 }

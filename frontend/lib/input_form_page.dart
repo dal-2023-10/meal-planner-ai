@@ -230,12 +230,23 @@ class _InputFormPageState extends State<InputFormPage> {
             initialValue: selectedAllergy[i],
             title: const Text("アレルギー"),
             buttonText: Text("アレルギーを選択", style: GoogleFonts.mPlusRounded1c()),
-            chipDisplay: MultiSelectChipDisplay.none(),
+            chipDisplay: MultiSelectChipDisplay(
+              chipColor: accentColor.withOpacity(0.18),
+              textStyle: GoogleFonts.mPlusRounded1c(color: accentColor, fontWeight: FontWeight.bold),
+              onTap: (value) {
+                setState(() {
+                  selectedAllergy[i].remove(value);
+                });
+              },
+            ),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: accentColor.withOpacity(0.3)),
             ),
+            selectedColor: accentColor,
+            backgroundColor: bgColor,
+            listType: MultiSelectListType.LIST,
             onConfirm: (values) => setState(() => selectedAllergy[i] = values),
           ),
           const SizedBox(height: 4),
@@ -245,12 +256,23 @@ class _InputFormPageState extends State<InputFormPage> {
             initialValue: selectedPreference[i],
             title: const Text("趣向・宗教"),
             buttonText: Text("趣向・宗教を選択", style: GoogleFonts.mPlusRounded1c()),
-            chipDisplay: MultiSelectChipDisplay.none(),
+            chipDisplay: MultiSelectChipDisplay(
+              chipColor: accentColor.withOpacity(0.18),
+              textStyle: GoogleFonts.mPlusRounded1c(color: accentColor, fontWeight: FontWeight.bold),
+              onTap: (value) {
+                setState(() {
+                  selectedPreference[i].remove(value);
+                });
+              },
+            ),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: accentColor.withOpacity(0.3)),
             ),
+            selectedColor: accentColor,
+            backgroundColor: bgColor,
+            listType: MultiSelectListType.LIST,
             onConfirm: (values) => setState(() => selectedPreference[i] = values),
           ),
         ],

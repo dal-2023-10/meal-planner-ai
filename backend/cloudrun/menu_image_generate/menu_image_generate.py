@@ -70,7 +70,7 @@ class GeminiProcessor:
         self,
         api_key_env: str = "GOOGLE_API_KEY",
         # model_name: str = "models/gemini-2.0-flash",
-        model_name: str = "modelsgemini-2.5-flash-lite-preview-06-17",
+        model_name: str = "models/gemini-2.5-flash-preview-05-20",
         options: GeminiOptions = GeminiOptions(),  
         project_id: Optional[str] = None,
     ):

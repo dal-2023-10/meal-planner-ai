@@ -57,7 +57,7 @@ class ImageProcessor:
     def __init__(
         self,
         api_key_env: str = "GOOGLE_API_KEY",
-        model_name: str = "models/gemini-2.5-flash-lite-preview-06-17",
+        model_name: str = "models/gemini-2.5-flash-preview-05-20",
         options: GeminiOptions = GeminiOptions(),
         firebase_cred_path: str = None,
         firebase_bucket: str = None

@@ -1,51 +1,57 @@
-# Meal Planner
+# おなかプランナー
 
 食事計画を効率的に管理するためのアプリケーション
 
 ## プロジェクト構成
 
 ```
-meal_planner/
-│  README.md               # プロジェクト概要・セットアップ手順
-│  .gitignore             # Git除外設定
-│  .env.example           # 環境変数サンプル
+onaka-planner/
+│  README.md                # プロジェクト概要・セットアップ
+│  .gitignore               # Git管理除外
 │
-├─ .github/               # GitHub Actions など CI/CD 設定
-│   └─ workflows/
-│       ├─ frontend_ci.yml # Flutter テスト & ビルド
-│       └─ backend_ci.yml  # Cloud Run 用 API テスト & デプロイ
+├─ backend/                 # バックエンド（Cloud Run用API）
+│   └─ cloudrun/
+│       ├─ menu_image_generate/
+│       │    ├─ menu_image_generate.py   # メニュー→料理画像API
+│       │    ├─ Dockerfile
+│       │    ├─ requirements.txt
+│       │    └─ .env
+│       ├─ image_process/
+│       │    ├─ image_process.py   # チラシ画像→チラシ情報API
+│       │    ├─ Dockerfile
+│       │    ├─ requirements.txt
+│       │    └─ .env
+│       ├─ menu_generate/
+│       │    ├─ menu_generate.py         # メニュー生成API
+│       │    ├─ Dockerfile
+│       │    ├─ requirements.txt
+│       │    └─ .env
+│    　 └─ bq_uplode/
+│            ├─ bq_uplode.py             # BigQueryアップロードAPI
+│            ├─ Dockerfile
+│            ├─ requirements.txt
+│            └─ .env
 │
-├─ infra/                 # IaC・GCP リソース定義
-│   ├─ terraform/         # Terraform設定
-│   │   ├─ main.tf        # BigQuery DS/テーブル, Cloud Run, IAM
-│   │   └─ variables.tf
-│   └─ cloudbuild/        # Cloud Build 用設定
-│       ├─ cloudrun.yaml
-│       └─ bigquery.yaml
-│
-├─ backend/               # Cloud Run に載せる API
-│   ├─ src/meal_planner_api/
-│   │   ├─ __init__.py
-│   │   ├─ main.py        # FastAPI エントリポイント
-│   │   ├─ models.py      # Pydantic モデル
-│   │   └─ services.py    # BigQuery サービス
-│   ├─ tests/             # pytest
-│   ├─ Dockerfile
-│   └─ pyproject.toml     # 依存管理
-│
-├─ frontend/              # Flutter アプリ
-│   ├─ lib/
-│   │   ├─ main.dart
-│   │   └─ screens/       # 画面定義
-│   ├─ assets/           # 画像・フォント等
-│   ├─ test/             # テスト
-│   ├─ pubspec.yaml      # 依存管理
-│   └─ Dockerfile        # Webビルド用
-│
-└─ docs/                 # 設計ドキュメント
-    ├─ architecture/     # アーキテクチャ図
-    ├─ api/             # OpenAPI仕様
-    └─ decisions/       # ADR
+└─ frontend/                      # フロントエンド（Flutterアプリ）
+    ├─ lib/
+    │    ├─ main.dart                 # エントリーポイント
+    │    ├─ input_form_page.dart      # 入力フォーム画面
+    │    ├─ flyer_upload_page.dart    # チラシ画像アップロード画面
+    │    ├─ recipe_suggestions_page.dart # レシピ表示画面
+    │    ├─ loading_page.dart         # ローディング画面
+    │    └─ firebase_options.dart     # Firebase設定
+    ├─ android/                      # Androidネイティブ 
+    ├─ ios/                          # iOSネイティブ
+    ├─ linux/                        # Linuxネイティブ
+    ├─ macos/                        # macOSネイティブ
+    ├─ windows/                      # Windowsネイティブ
+    ├─ web/                          # Web設定・リソース
+    ├─ public/                       # Web公開用静的ファイル
+    ├─ test/                         # テストコード
+    ├─ analysis_options.yaml         # 静的解析設定
+    ├─ pubspec.yaml                  # 依存パッケージ
+    ├─ pubspec.lock                  # 依存バージョンロック
+    └─ firebase.json                 # Firebase設定
 ```
 
 ## セットアップ手順
